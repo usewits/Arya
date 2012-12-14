@@ -9,6 +9,8 @@ uniform sampler2D texture4;
 in vec2 texCoo;
 in vec4 posOut;
 in vec3 normalOut;
+in vec3 lightSrc;
+in float spec;
 out vec4 FragColor;
 
 vec4 terrainColor(vec2 tex)
@@ -24,10 +26,12 @@ vec4 terrainColor(vec2 tex)
 
 void main()
 {
-    float lightFraction = max(0.0,dot(normalize(normalOut), vec3(0.7, 0.7, 0.0)));
+    float lightFraction = max(0.0,dot(normalize(normalOut), lightSrc));
     //Ambient
     lightFraction = min(lightFraction + 0.40, 1.0);
 
     FragColor = terrainColor(texCoo);
     FragColor *= lightFraction;
+	FragColor+= 1.0*vec3(pow(spec,6.0));
+	FragColor.a=1.0f;
 }

@@ -6,6 +6,7 @@ GameSession::GameSession()
     goingForward = goingBackward = goingLeft = goingRight = goingUp = goingDown = false;
     mouseLeft = mouseRight = mouseTop = mouseBot = false;
     draggingLeftMouse = draggingRightMouse = false;
+	rotatingLeft = rotatingRight = false;
 	slowMode = false;
     forceDirection = vec3(0.0f);
     specMovement = vec3(0.0f);
@@ -47,7 +48,7 @@ bool GameSession::init()
     tileSet.push_back(TextureManager::shared().getTexture("rock.tga"));
     tileSet.push_back(TextureManager::shared().getTexture("dirt.tga"));
     tileSet.push_back(TextureManager::shared().getTexture("snow.tga"));
-    if(!scene->setMap("heightmap.raw", tileSet, TextureManager::shared().getTexture("splatmap.tga")))
+    if(!scene->setMap("heightmap.raw", "watermap.raw", tileSet, TextureManager::shared().getTexture("splatmap.tga")))
         return false;
 
     Root::shared().getOverlay()->addRect(&selectionRect);
@@ -58,8 +59,8 @@ bool GameSession::init()
 void GameSession::onFrame(float elapsedTime)
 {
     Camera* cam = Root::shared().getScene()->getCamera();
-
-	specMovement*=pow(.002f,elapsedTime);
+	
+	specMovement*=glm::pow(.002f,elapsedTime);
 
     if(cam != 0)
     {
@@ -91,8 +92,8 @@ bool GameSession::keyDown(int key, bool keyDown)
 		case GLFW_KEY_LSHIFT: slowMode = keyDown; break;
         case 'W': goingForward = keyDown;	DirectionChanged = true; break;
         case 'S': goingBackward = keyDown;	DirectionChanged = true; break;
-        case 'Q': rotatingLeft = keyDown;	break;
-        case 'E': rotatingRight = keyDown;	break;
+        case 'Q': rotatingLeft = keyDown;							 break;
+        case 'E': rotatingRight = keyDown;							 break;
         case 'A': goingLeft = keyDown;		DirectionChanged = true; break;
         case 'D': goingRight = keyDown;		DirectionChanged = true; break;
         case 'Z': goingDown = keyDown;		DirectionChanged = true; break;
@@ -104,8 +105,8 @@ bool GameSession::keyDown(int key, bool keyDown)
         forceDirection = vec3(0.0f);
         if(goingForward || mouseTop)    forceDirection.z -= 1.0f;
         if(goingBackward || mouseBot)   forceDirection.z += 1.0f;
-        if(goingLeft || mouseLeft)      forceDirection.x -= 1.0f;
-        if(goingRight || mouseRight)    forceDirection.x  = 1.0f;
+        if(goingLeft || mouseLeft)      forceDirection.x -= 2.0f;
+        if(goingRight || mouseRight)    forceDirection.x  = 2.0f;
         if(goingUp)         forceDirection.y  = 2.0f;
         if(goingDown)       forceDirection.y -= 2.0f;
     }

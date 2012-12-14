@@ -32,7 +32,7 @@ namespace Arya
 
             void onFrame(float elapsedTime);
 
-            bool setMap(const char* hm, vector<Texture*> ts, Texture* sm);
+            bool setMap(const char* hm, const char* wm, vector<Texture*> ts, Texture* sm);
             Camera* getCamera() { return camera; };
 
             Object* createObject();

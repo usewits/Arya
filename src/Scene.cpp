@@ -49,7 +49,7 @@ namespace Arya
         if(!camera)
         {
             camera = new Camera;
-            camera->setProjectionMatrix(45.0f, 1.6f, 0.1f, 2000.0f);
+            camera->setProjectionMatrix(45.0f, 1.6f, 0.1f, 8000.0f);
         }
 
         initialized = true;
@@ -75,12 +75,12 @@ namespace Arya
         return true;
     }
 
-    bool Scene::setMap(const char* hm, vector<Texture*> ts, Texture* sm)
+    bool Scene::setMap(const char* hm, const char* wm, vector<Texture*> ts, Texture* sm)
     {
         if(currentMap)
             delete currentMap;
         currentMap = new Map();
-        if(!currentMap->init(hm, ts, sm)) return false;
+        if(!currentMap->init(hm, wm, ts, sm)) return false;
         return true;
     }
 

@@ -160,7 +160,7 @@ namespace Arya
             //}
             updateMatrix = false;
         }
-        if( outMatrix ) *outMatrix = projectionMatrix * viewMatrix;
+        if( outMatrix ) *outMatrix = vpMatrix;//projectionMatrix * viewMatrix;
         return;
     }
 
@@ -169,5 +169,11 @@ namespace Arya
         if( updateMatrix ) updateViewProjectionMatrix(0);
         return vpMatrix;
     }
+
+	mat4 Camera::getviewMatrix()
+	{
+		if( updateMatrix ) updateViewProjectionMatrix(0);
+		return viewMatrix;
+	}
 
 }

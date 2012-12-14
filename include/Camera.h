@@ -60,6 +60,7 @@ namespace Arya
             float camPitchSpeed; //Pitch speed in radians per second
 
             mat4 getVPMatrix();
+			mat4 getviewMatrix();
 
         private:
             vec3 position; //look-at-position. Actual camera is 'zoomed out' from here
