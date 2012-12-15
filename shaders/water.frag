@@ -1,13 +1,26 @@
 #version 400
 
+//uniform sampler2D rippleMap;
+uniform sampler2D clouds;
+in vec3 normalVector;
+in vec2 texCoord;
+
+in float spec;
+in float alpha;
+in float depth;
+
 out vec4 FragColor;
 
-in vec3 normalOut;
+vec4 terrainColor(vec2 tex)
+{
+    return texture(clouds, 3.*(tex-.001*normalVector.xz));
+}
 
 void main()
 {
-	vec3 lighting=vec3(0.7, 0.7, 0.0);
-	float prod=1.0*dot(normalOut,vec3(1.0,1.0,0.0));
-
-	FragColor=vec4(prod, prod, prod+0.7, 0.5);
+	float refFact=0.1*pow(spec,0.2)+0.2*pow(spec,2.0)+10.0*pow(spec,100.0);
+	//.6+0.3*pow(alpha,2.0)
+	vec3 waterColor=.5*terrainColor(texCoord).xyz+.5*vec3(0.0862745, 0.266667, 0.678431);//
+	if(0.2+min(10.0*depth,1.0) < 0.9) discard;
+	FragColor=vec4(waterColor, 0.2+min(10.0*depth,1.0))+refFact*vec4(waterColor, 0);
 }

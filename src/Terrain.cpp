@@ -38,7 +38,7 @@ namespace Arya
         heightMapHandle = 0;
 		waterMapHandle = 0;
 		rippleMapHandle = 0;
-
+		
 		time=0;
     }
 
@@ -74,8 +74,13 @@ namespace Arya
             if(!tileSet[i]) return false;
             glBindTexture(GL_TEXTURE_2D, tileSet[i]->handle);
             glGenerateMipmap(GL_TEXTURE_2D);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			if(i == 4) {
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+			} else {
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			}
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         }
@@ -349,6 +354,7 @@ namespace Arya
         glActiveTexture(GL_TEXTURE5);
         glBindTexture(GL_TEXTURE_2D, tileSet[3]->handle);
 
+
         for(int i = 0; i < patches.size(); ++i) {
             Patch& p = patches[i];
             if(p.lod < 0) continue;
@@ -365,6 +371,7 @@ namespace Arya
         waterProgram->setUniformMatrix4fv("vpMatrix", cam->getVPMatrix());
 		waterProgram->setUniformMatrix4fv("viewMatrix", cam->getviewMatrix());
         waterProgram->setUniformMatrix4fv("scaleMatrix", scaleMatrix);
+		waterProgram->setUniform3fv("lightSource",vec3(0.7,0.7,0.0));
 
 		// watermap
         waterProgram->setUniform1i("waterMap", 6);
@@ -375,9 +382,12 @@ namespace Arya
         waterProgram->setUniform1i("heightMap", 0);
 
 		// ripplemap
-		waterProgram->setUniform1i("rippleMap", 7);
+		waterProgram->setUniform1i("clouds", 7);
+        glActiveTexture(GL_TEXTURE7);
+        glBindTexture(GL_TEXTURE_2D, tileSet[4]->handle);
+		/*waterProgram->setUniform1i("clouds", 7);
 		glActiveTexture(GL_TEXTURE7);
-        glBindTexture(GL_TEXTURE_2D, rippleMapHandle);
+        glBindTexture(GL_TEXTURE_2D, rippleMapHandle);*/
 
 		for(int i = 0; i < patches.size(); ++i) {
             Patch& p = patches[i];

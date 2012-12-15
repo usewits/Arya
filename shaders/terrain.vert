@@ -40,8 +40,7 @@ void main()
 	vec4 norm=normalize(viewMatrix*vec4(normal.xyz,0.0));
 	vec4 light=viewMatrix*vec4(lightSource.xyz,0.0);
 	vec4 reflection=2.0*norm*dot(light,norm)-light;
-	spec=max(dot(reflection,-1.0*normalize(viewMatrix*pos)),0);
-	//spec=dot(norm,norm);
+	spec=0;//max(dot(reflection,-1.0*normalize(viewMatrix*pos)),0);
 
     gl_Position = vpMatrix * pos;
     posOut = pos;

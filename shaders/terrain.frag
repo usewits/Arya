@@ -18,9 +18,9 @@ vec4 terrainColor(vec2 tex)
     vec4 tColor = vec4(0.0);
     vec4 splatSample = vec4(0.0);
     splatSample = texture(splatTexture, texCoo);
-    tColor += splatSample.r * texture(texture1, 10.0*texCoo);
-    tColor += splatSample.g * texture(texture2, 10.0*texCoo);
-    tColor += splatSample.b * texture(texture3, 10.0*texCoo);
+    tColor += splatSample.r * texture(texture1, 10.0*tex);
+    tColor += splatSample.g * texture(texture2, 10.0*tex);
+    tColor += splatSample.b * texture(texture3, 10.0*tex);
     return tColor / (splatSample.r + splatSample.g + splatSample.b);
 }
 
