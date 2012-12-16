@@ -31,7 +31,7 @@ namespace Arya
     {
         public:
             // Tileset needs to have 4 elements
-            Terrain(const char* hm, const char* wm, vector<Material*> ts, Texture* cm, Texture* sm);
+            Terrain(const char* hm, const char* wm, vector<Material*> ts, vector<Texture*> ss, Texture* sm);
             ~Terrain(); 
 			
             void render(Camera* cam);
@@ -52,7 +52,7 @@ namespace Arya
             const char* heightMapName;
 			const char* waterMapName;
             vector<Material*> tileSet;
-			Texture* cloudMap;
+			vector<Texture*> skySet;
             Texture* splatMap;
             GLuint heightMapHandle;
 			GLuint waterMapHandle;

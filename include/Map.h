@@ -18,9 +18,9 @@ namespace Arya
             Map();
             ~Map();
 
-            bool init(const char* hm, const char* wm, vector<Material*> ts, Texture* cm, Texture* sm);
+            bool init(const char* hm, const char* wm, vector<Material*> ts, vector<Texture*> ss, Texture* sm);
 
-            bool setTerrain(const char* hm, const char* wm, vector<Material*> ts, Texture* cm, Texture* sm);
+            bool setTerrain(const char* hm, const char* wm, vector<Material*> ts, vector<Texture*> ss, Texture* sm);
             void render(Camera* cam);
             void update(float elapsedTime, Scene* scene);
 

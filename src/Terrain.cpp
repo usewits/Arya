@@ -25,14 +25,14 @@ using glm::distance;
 
 namespace Arya
 {
-    Terrain::Terrain(const char* hm, const char* wm, vector<Material*> ts, Texture* cm, Texture* sm) 
+    Terrain::Terrain(const char* hm, const char* wm, vector<Material*> ts, vector<Texture*> ss, Texture* sm) 
     {
         heightMapName = hm;
 		waterMapName = wm;
         tileSet = ts;
         if(!(tileSet.size() == 4))
             LOG_WARNING("Tileset is of wrong size");
-		cloudMap = cm;
+		skySet = ss;
         splatMap = sm;
         vertexBuffer = 0;
         indexBuffer = 0;
@@ -73,7 +73,7 @@ namespace Arya
 
     bool Terrain::init()
     {
-        if(heightMapName == 0 || waterMapName == 0 || cloudMap == 0 || splatMap == 0) return false;
+        if(heightMapName == 0 || waterMapName == 0 || splatMap == 0) return false;
 
         for(int i = 0; i < tileSet.size(); ++i) {
             if(!tileSet[i]) return false;
@@ -152,7 +152,7 @@ namespace Arya
 
 
 		glActiveTexture(GL_TEXTURE7);
-        glBindTexture(GL_TEXTURE_2D, cloudMap->handle);
+        glBindTexture(GL_TEXTURE_2D, skySet[0]->handle);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 		
@@ -408,7 +408,11 @@ namespace Arya
 		//cloudmap
 		waterProgram->setUniform1i("clouds", 7);
 		glActiveTexture(GL_TEXTURE7);
-        glBindTexture(GL_TEXTURE_2D, cloudMap->handle);
+        glBindTexture(GL_TEXTURE_2D, skySet[0]->handle);
+		//starmap
+		waterProgram->setUniform1i("stars", 8);
+		glActiveTexture(GL_TEXTURE8);
+        glBindTexture(GL_TEXTURE_2D, skySet[1]->handle);
 
 		for(int i = 0; i < patches.size(); ++i) {
             Patch& p = patches[i];

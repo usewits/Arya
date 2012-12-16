@@ -22,9 +22,9 @@ namespace Arya
         if(terrain) delete terrain;
     }
 
-    bool Map::init(const char* hm, const char* wm, vector<Material*> ts, Texture* cm, Texture* sm)
+    bool Map::init(const char* hm, const char* wm, vector<Material*> ts, vector<Texture*> ss, Texture* sm)
     {
-        if(!setTerrain(hm, wm, ts, cm, sm)) {
+        if(!setTerrain(hm, wm, ts, ss, sm)) {
             LOG_ERROR("Could not initialize map");
             return false;
         }
@@ -32,7 +32,7 @@ namespace Arya
         return true;
     }
 
-    bool Map::setTerrain(const char* hm, const char* wm, vector<Material*> ts, Texture* cm, Texture* sm)
+    bool Map::setTerrain(const char* hm, const char* wm, vector<Material*> ts, vector<Texture*> ss, Texture* sm)
     {
         if(!hm || !wm || !(ts.size()) || !sm) {
             if(terrain) delete terrain;
@@ -40,7 +40,7 @@ namespace Arya
             return false;
         }
 
-        Terrain* newTerrain = new Terrain(hm, wm, ts, cm, sm);
+        Terrain* newTerrain = new Terrain(hm, wm, ts, ss, sm);
         if(!newTerrain->init()) {
             LOG_ERROR("Could not initialize terrain");
             delete newTerrain;
