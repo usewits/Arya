@@ -21,9 +21,11 @@ class Packet
     private:
         friend class Connection;
         friend class Network;
+        friend class Server;
+        friend class ServerClientHandler;
 
         //For creating packets (for sending)
-        Packet(int id) : data(12, 32), readPos(12), markedForSend(false) //allocate 32 bytes by default
+        Packet(int id) : data(12, 32), readPos(12), markedForSend(false), refCount(0)  //allocate 32 bytes by default
         {
             *(int*)&data[0] = PACKETMAGICINT;
             *(int*)&data[4] = 12;
@@ -31,7 +33,7 @@ class Packet
         }
 
         //For receiving packets
-        Packet(char* databuf, int size) : data(databuf, size), readPos(12), markedForSend(false) {};
+        Packet(char* databuf, int size) : data(databuf, size), readPos(12), markedForSend(false), refCount(0) {};
 
         ~Packet(){};
 
@@ -77,6 +79,12 @@ class Packet
             return *this;
         }
 
+        inline Packet& operator<<(float val)
+        {
+            data.append(&val, sizeof(val));
+            return *this;
+        }
+
         inline Packet& operator<<(const std::string& str)
         {
             data.append(str.c_str(), str.size()+1);
@@ -94,5 +102,11 @@ class Packet
         buffer data;
         int readPos;
         bool markedForSend;
+
+        //The server must often send a packet to all clients
+        //In this case they all add a refcount, and only when
+        //all clients received the packet and the refcount is zero
+        //then this packet may be deleted
+        int refCount;
 };
 

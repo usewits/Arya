@@ -1,4 +1,5 @@
 #include "../include/Game.h"
+#include "Console.h"
 #include "../include/GameSession.h"
 #include "../include/Network.h"
 #include "../include/Events.h"
@@ -6,12 +7,16 @@
 
 Game* Game::singleton = 0;
 
+#define NETWORK_POLL 0.05f
+
 Game::Game()
 {
     root = 0;
     session = 0;
     eventManager = 0;
     network = 0;
+
+    timeSinceNetworkPoll = 1.0f;
 
     singleton = this;
 }
@@ -28,46 +33,40 @@ void Game::run()
 {
     root = new Root;
 
-    if(!(root->init(true, 1920, 1080))) {
+    if(!(root->init(true, 800, 600))) {
         LOG_ERROR("Unable to init root");
     }
     else
     {
         root->addInputListener(this);
 
-        if(session) delete session;
-        session = new GameSession;
+        if(network) delete network;
+        network = new Network;
 
-        if(!session->init()) {
-            LOG_ERROR("Could not start a new session");
-            Root::shared().stopRendering();
-        }
-        else
-        {
-            if(network) delete network;
-            network = new Network;
+        network->startServer();
 
-            network->startServer();
+        network->connectToSessionServer("127.0.0.1", 1337);
 
-            network->connectToSessionServer("127.0.0.1", 1337);
+        if(eventManager) delete eventManager;
+        eventManager = new EventManager(network);
 
-            if(eventManager) delete eventManager;
-            eventManager = new EventManager(network);
+        network->setPacketHandler(eventManager);
 
-            network->setPacketHandler(eventManager);
+        Event& joinEvent = eventManager->createEvent(EVENT_JOIN_GAME);
+        joinEvent << 0; // accountId
+        joinEvent << 0; // roomId
+        joinEvent.send();
 
-            networkFrameCount = 0;
-            root->addFrameListener(this);
+        eventManager->addEventHandler(EVENT_GAME_READY, this);
 
-            root->startRendering();
-        }
+        root->addFrameListener(this);
+        root->startRendering();
     }
 }
 
 bool Game::keyDown(int key, bool keyDown)
 {
     bool keyHandled = true;
-
     switch(key) {
         case 'P':
             if(keyDown) {
@@ -91,10 +90,9 @@ bool Game::keyDown(int key, bool keyDown)
         case 'O': glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); break;
         case 'I': glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); break;
         case GLFW_KEY_F11: Root::shared().setFullscreen(!Root::shared().getFullscreen()); break;
-        case GLFW_KEY_ESC: Root::shared().stopRendering(); break;
+        case GLFW_KEY_ESC: if(keyDown) Root::shared().stopRendering(); break;
         default: keyHandled = false; break;
     }
-
     return keyHandled;
 }
 
@@ -115,10 +113,52 @@ bool Game::mouseMoved(int x, int y, int dx, int dy)
 
 void Game::onFrame(float elapsedTime)
 {
-    ++networkFrameCount;
-    if(networkFrameCount > 5)
+    timeSinceNetworkPoll += elapsedTime;
+    if(timeSinceNetworkPoll > NETWORK_POLL)
     {
         network->update();
-        networkFrameCount = 0;
+        timeSinceNetworkPoll = 0.0f;
     }
+}
+
+void Game::handleEvent(Packet& packet)
+{
+    int id = packet.getId();
+    if(id == EVENT_GAME_READY)
+    {
+        if(session) delete session;
+        session = new GameSession;
+
+        if(!session->init()) {
+            LOG_ERROR("Could not start a new session");
+            Root::shared().stopRendering();
+        }
+
+        LOG_INFO("Game is ready");
+    }
+    else if(id == EVENT_GAME_FULLSTATE)
+    {
+        int playerCount;
+        packet >> playerCount;
+
+        LOG_INFO("Game has " << playerCount << " player(s)");
+
+        for(int i = 0; i < playerCount; ++i)
+        {
+            int clientId;
+            packet >> clientId;
+
+            //faction deserialize
+
+            int unitCount;
+            packet >> unitCount;
+            for(int i = 0; i < unitCount; ++i)
+            {
+                //create unit
+                //deserialize
+            }
+        }
+    }
+    else
+        LOG_INFO("Unkown event received!");
 }

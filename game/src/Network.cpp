@@ -85,7 +85,9 @@ class Connection
                         bytesReceived += n;
 
                         //Check if we received the packet header
-                        if(bytesReceived >= 8)
+                        //The while is because we often receive
+                        //multiple packets in a single receive call
+                        while(bytesReceived >= 12)
                         {
                             if( *(int*)dataBuffer != PACKETMAGICINT )
                             {
@@ -112,6 +114,10 @@ class Connection
                                     memmove(dataBuffer, dataBuffer + packetSize, extraSize);
                                 bytesReceived = extraSize;
                             }
+                            else
+                            {
+                                break;
+                            }
                         }
                     }
                 }
@@ -137,10 +143,14 @@ class Connection
             }
             else
             {
-                while(!packets.empty())
+                if(!packets.empty())
                 {
-                    delete packets.back();
-                    packets.pop_back();
+                    LOG_WARNING("There are packets in the send queue but there is no connection!");
+                    while(!packets.empty())
+                    {
+                        delete packets.back();
+                        packets.pop_back();
+                    }
                 }
             }
         }

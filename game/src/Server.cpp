@@ -1,7 +1,12 @@
 #include "../include/Server.h"
 #include "../include/Packet.h"
+#include "../include/EventCodes.h"
+#include "../include/ServerClientHandler.h"
+#include "../include/ServerClient.h"
+#include "../include/Units.h"
 #include "Arya.h"
 #include <cstring>
+#include <algorithm>
 
 #include "Poco/Exception.h"
 #include "Poco/Net/NetException.h"
@@ -13,28 +18,13 @@
 using namespace Poco;
 using namespace Poco::Net;
 
-class NetworkClientHandler;
-
-class ConnectionAcceptor : public SocketAcceptor<NetworkClientHandler>
-{
-    public:
-        ConnectionAcceptor(ServerSocket& socket, SocketReactor& reactor) : SocketAcceptor(socket, reactor)
-        {
-            LOG_INFO("ConnectionAcceptor()");
-        }
-
-        ~ConnectionAcceptor()
-        {
-            LOG_INFO("~ConnectionAcceptor()");
-        }
-};
-
 Server::Server()
 {
     serverSocket = 0;
     reactor = 0;
     acceptor = 0;
     port = 1337;
+    clientIdFactory = 100;
 }
 
 Server::~Server()
@@ -67,120 +57,118 @@ void Server::runInThread()
 
     //Create the acceptor that will listen on the server socket
     //It will register to the reactor
-    acceptor = new ConnectionAcceptor(*serverSocket, *reactor);
+    acceptor = new ConnectionAcceptor(*serverSocket, *reactor, this);
 
     thread.start(*reactor);
     LOG_INFO("Server started on port " << port);
 }
 
-class NetworkClientHandler
+Packet* Server::createPacket(int id)
 {
-    public:
-        NetworkClientHandler(StreamSocket& _socket, SocketReactor& _reactor) : socket(_socket), reactor(_reactor), bufferSizeTotal(1024)
+    return new Packet(id);
+}
+
+void Server::sendToAllClients(Packet* pak)
+{
+    for(clientIterator iter = clientList.begin(); iter != clientList.end(); ++iter)
+    {
+        iter->second->handler->sendPacket(pak);
+    }
+}
+
+//------------------------------
+// SERVER LOGIC
+//------------------------------
+
+void Server::newClient(ServerClientHandler* client)
+{
+    ServerClient* cl = new ServerClient(this, client);
+    clientList.insert(std::make_pair(client, cl));
+}
+
+void Server::removeClient(ServerClientHandler* client)
+{
+    clientIterator cl = clientList.find(client);
+    if(cl != clientList.end() )
+    {
+        //TODO:
+        //Lots of stuff like sending a message
+        //to everyone about the client being disconnected
+        //Distribute their resources accross allies
+        //and so on
+        //This could be done in the deconstructor
+        //if wanted
+        delete cl->second;
+        clientList.erase(cl);
+    }
+}
+
+void Server::handlePacket(ServerClientHandler* clienthandler, Packet& packet)
+{
+    clientIterator iter = clientList.find(clienthandler);
+    if(iter == clientList.end())
+    {
+        LOG_WARNING("Received packet from unkown client!");
+        return;
+    }
+    ServerClient* client = iter->second;
+
+    switch(packet.getId()){
+    case EVENT_JOIN_GAME:
         {
-            LOG_INFO("NetworkClientHandler()");
-            NObserver<NetworkClientHandler, ReadableNotification> readObserver(*this, &NetworkClientHandler::onReadable);
-            NObserver<NetworkClientHandler, ShutdownNotification> shutdownObserver(*this, &NetworkClientHandler::onShutdown);
-            reactor.addEventHandler(socket, readObserver);
-            reactor.addEventHandler(socket, shutdownObserver);
+            client->setClientId(clientIdFactory++);
 
-            dataBuffer = new char[bufferSizeTotal+1];
-            bytesReceived = 0;
-        }
+            Packet* pak = createPacket(EVENT_CLIENT_ID);
+            *pak << client->getClientId();
+            clienthandler->sendPacket(pak);
 
-        ~NetworkClientHandler()
-        {
-            LOG_INFO("~NetworkClientHandler()");
-            NObserver<NetworkClientHandler, ReadableNotification> readObserver(*this, &NetworkClientHandler::onReadable);
-            NObserver<NetworkClientHandler, ShutdownNotification> shutdownObserver(*this, &NetworkClientHandler::onShutdown);
-            reactor.removeEventHandler(socket, readObserver);
-            reactor.removeEventHandler(socket, shutdownObserver);
-            delete[] dataBuffer;
-        }
+            //Create faction
+            client->createFaction();
+            client->createStartUnits();
 
-        StreamSocket socket;
-        SocketReactor& reactor;
-
-        const int bufferSizeTotal;
-        char* dataBuffer;
-        int bytesReceived; //when a partial packet is in the buffer
-
-        void onReadable(const AutoPtr<ReadableNotification>& notification)
-        {
-            int n = 0;
-            try
+            int joinedCount = 0;
+            for(clientIterator iter = clientList.begin(); iter != clientList.end(); ++iter)
             {
-                n = socket.receiveBytes(dataBuffer + bytesReceived, bufferSizeTotal - bytesReceived);
-            }
-            catch(TimeoutException& e)
-            {
-                LOG_WARNING("Timeout exception when reading socket!");
-            }
-            catch(NetException& e)
-            {
-                LOG_WARNING("Net exception when reading socket");
+                if( iter->second->getClientId() != -1 ) ++joinedCount;
             }
 
-            if(n <= 0)
+            LOG_INFO("Clients joined: " << joinedCount);
+            if(joinedCount >= 1)
             {
-                LOG_INFO("Client closed connection");
-                delete this;
-            }
-            else
-            {
-                bytesReceived += n;
+                pak = createPacket(EVENT_GAME_READY);
+                //Send to all clients
+                sendToAllClients(pak);
 
-                //Check if we received the packet header
-                if(bytesReceived >= 8)
+                pak = createPacket(EVENT_GAME_FULLSTATE);
+
+                *pak << joinedCount; //player count
+                //for each player:
+                for(clientIterator iter = clientList.begin(); iter != clientList.end(); ++iter)
                 {
-                    if( *(int*)dataBuffer != PACKETMAGICINT )
+                    if(iter->second->getClientId() == -1) continue;
+
+                    *pak << iter->second->getClientId();
+
+                    Faction* faction = iter->second->getFaction();
+                    faction->serialize(*pak);
+
+                    int unitCount = (int)faction->getUnits().size();
+
+                    *pak << unitCount;
+                    for(std::list<Unit*>::iterator iter = faction->getUnits().begin(); iter != faction->getUnits().end(); ++iter)
                     {
-                        LOG_WARNING("Invalid packet header! Removing client");
-                        terminate();
-                        return;
-                    }
-                    int packetSize = *(int*)(dataBuffer + 4); //this is including the header
-                    if(packetSize > bufferSizeTotal)
-                    {
-                        LOG_WARNING("Packet does not fit in buffer. Possible hack attempt. Removing client. Packet size = " << packetSize);
-                        terminate();
-                        return;
-                    }
-                    if(bytesReceived >= packetSize)
-                    {
-                        handlePacket(dataBuffer+8, packetSize - 8);
-                        //if there was more data in the buffer, move it
-                        //to the start of the buffer
-                        int extraSize = bytesReceived - packetSize;
-                        if(extraSize > 0)
-                            memmove(dataBuffer, dataBuffer + packetSize, extraSize);
-                        bytesReceived = extraSize;
+                        (*iter)->serialize(*pak);
                     }
                 }
+
+                sendToAllClients(pak);
             }
+            break;
         }
+    default:
+        LOG_INFO("Unknown package received..");
+        break;
+    }
 
-        void onShutdown(const AutoPtr<ShutdownNotification>& notification)
-        {
-            LOG_INFO("Shutdown notification");
-            delete this;
-        }
-
-        void terminate()
-        {
-            socket.shutdown(); //send TCP shutdown
-            socket.close();
-            delete this;
-        }
-
-        void sendPacket(Packet* pak)
-        {
-
-        }
-
-        void handlePacket(char* data, int packetSize)
-        {
-            LOG_INFO("Received Arya packet!");
-        }
-};
-
+    return;
+}

@@ -52,11 +52,11 @@ bool GameSession::init()
 
     // init factions
     localFaction = new Faction;
-    localFaction->setColor(vec3(1.0, 0.0, 0.0));
+    localFaction->setColor(0);
     factions.push_back(localFaction);
 
     Faction* otherFaction = new Faction;
-    otherFaction->setColor(vec3(0.0, 0.0, 1.0));
+    otherFaction->setColor(1);
     factions.push_back(otherFaction);
 
     Scene* scene = Root::shared().makeDefaultScene();
@@ -87,6 +87,7 @@ bool GameSession::init()
     // and this will fix this issue
     UnitInfo* info = new UnitInfo;
     info->radius = 5.0f;
+    info->attackRadius = 5.0f;
     info->maxHealth = 100.0f;
     info->speed = 30.0f;
     info->yawSpeed = 720.0f;
@@ -96,27 +97,49 @@ bool GameSession::init()
     for(int i = 0; i < 30; ++ i) 
     {
         Unit* unit = new Unit(info);
-        float heightModel = Root::shared().getScene()->getMap()->getTerrain()->heightAtGroundPosition(20.0 * i / 10, -50.0+20.0*(i % 10));
+        float heightModel = Root::shared().getScene()->getMap()->getTerrain()->heightAtGroundPosition(20.0 * (i / 10), -50.0+20.0*(i % 10));
         obj = scene->createObject();
         obj->setModel(ModelManager::shared().getModel("ogros.aryamodel"));
-        obj->setPosition(vec3(20 * i / 10, heightModel, -50 + 20 * (i % 10)));
         obj->setAnimation("stand");
-
         unit->setObject(obj);
+        unit->setPosition(vec3(20 * (i / 10), heightModel, -50 + 20 * (i % 10)));
+
         localFaction->addUnit(unit);
     }
 
     for(int i = 0; i < 30; ++ i) 
     {
         Unit* unit = new Unit(info);
-        float heightModel = Root::shared().getScene()->getMap()->getTerrain()->heightAtGroundPosition(-100.0 + 20.0 * i / 10, -100.0+20.0*(i % 10));
+        float heightModel = Root::shared().getScene()->getMap()->getTerrain()->heightAtGroundPosition(-100.0 + 20.0 * (i / 10), -100.0+20.0*(i % 10));
         obj = scene->createObject();
         obj->setModel(ModelManager::shared().getModel("ogros.aryamodel"));
-        obj->setPosition(vec3(-100.0 + 20 * i / 10, heightModel, -100.0 + 20 * (i % 10)));
         obj->setAnimation("stand");
-
         unit->setObject(obj);
+        unit->setPosition(vec3(-100.0 + 20 * (i / 10), heightModel, -100.0 + 20 * (i % 10)));
+
         otherFaction->addUnit(unit);
+    }
+
+    info = new UnitInfo;
+    info->radius = 5.0f;
+    info->attackRadius = 50.0f;
+    info->maxHealth = 60.0f;
+    info->speed = 30.0f;
+    info->yawSpeed = 720.0f;
+    info->damage = 30.0f;
+    info->attackSpeed = 1.0f;
+
+    for(int i = 0; i < 10; ++ i) 
+    {
+        Unit* unit = new Unit(info);
+        float heightModel = Root::shared().getScene()->getMap()->getTerrain()->heightAtGroundPosition(-200.0 + 20.0 * (i / 10), -50.0+20.0*(i % 10));
+        obj = scene->createObject();
+        obj->setModel(ModelManager::shared().getModel("hep.aryamodel"));
+        obj->setAnimation("stand");
+        unit->setObject(obj);
+        unit->setPosition(vec3(-200.0 + 20 * (i / 10), heightModel, -50 + 20 * (i % 10)));
+
+        localFaction->addUnit(unit);
     }
 
     selectionDecalHandle = 0;

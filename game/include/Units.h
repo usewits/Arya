@@ -9,6 +9,7 @@ using Arya::Root;
 typedef struct
 {
     float radius;
+    float attackRadius;
     float speed;
     float yawSpeed; //in degrees
 
@@ -26,11 +27,16 @@ typedef enum
     UNIT_DYING
 } UnitState;
 
+class Packet;
+
 class Unit
 {
     public:
         Unit(UnitInfo* inf);
         ~Unit();
+
+        void setPosition(const vec3& pos) { position = pos; if(object) object->setPosition(pos); }
+        vec3 getPosition() const { return position; }
 
         void setObject(Object* obj);
         Object* getObject() const { return object; }
@@ -63,8 +69,12 @@ class Unit
         vec2 getScreenPosition() const { return screenPosition; }
         void setTintColor(vec3 tC);
 
+        void serialize(Packet& pk);
+        void deserialize(Packet& pk);
+
     private:
-        Object* object;
+        Object* object; //object->position is always the same as position
+        vec3 position; //since server has no Object, position is stored here
         UnitInfo* info;
         bool selected;
 
@@ -83,4 +93,7 @@ class Unit
         Rect* healthBar;
 
         vec3 tintColor;
+
+        int id;
+        int factionId;
 };

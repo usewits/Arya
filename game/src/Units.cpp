@@ -1,4 +1,5 @@
 #include "../include/Units.h"
+#include "../include/Packet.h"
 #include <math.h>
 
 #ifdef _WIN32
@@ -32,14 +33,17 @@ Unit::Unit(UnitInfo* inf)
     // need to check if this flips orientation
     healthBar->offsetInPixels = vec2(-12.5, 25.0);
 
-    Root::shared().getOverlay()->addRect(healthBar);
+    // Root::shared().getOverlay()->addRect(healthBar);
+
+    id = -1;
+    factionId = -1;
 }
 
 Unit::~Unit()
 {
     if(targetUnit)
         targetUnit->release();
-    object->setObsolete();
+    if(object) object->setObsolete();
 
     Root::shared().getOverlay()->removeRect(healthBar);
     delete healthBar;
@@ -80,8 +84,8 @@ void Unit::update(float timeElapsed)
             return;
         }
 
-        if(glm::distance(object->getPosition(), targetUnit->getObject()->getPosition())
-                < targetUnit->getInfo()->radius) {
+        if(glm::distance(getPosition(), targetUnit->getPosition())
+                < targetUnit->getInfo()->radius + info->attackRadius) {
             if(unitState != UNIT_ATTACKING)
                 setUnitState(UNIT_ATTACKING);
 
@@ -105,48 +109,50 @@ void Unit::update(float timeElapsed)
         else {
             if(unitState != UNIT_ATTACKING_OUT_OF_RANGE)
                 setUnitState(UNIT_ATTACKING_OUT_OF_RANGE);
-            targetPosition = vec2(targetUnit->getObject()->getPosition().x,
-                            targetUnit->getObject()->getPosition().z);
+            targetPosition = vec2(targetUnit->getPosition().x,
+                            targetUnit->getPosition().z);
         }
     }
 
     float targeth;
     targeth = Root::shared().getScene()->getMap()->getTerrain()->heightAtGroundPosition(targetPosition.x, targetPosition.y);
     vec3 target(targetPosition.x, targeth, targetPosition.y);
-    vec3 diff = target - object->getPosition();
+    vec3 diff = target - getPosition();
+
+    if(glm::length(diff) < 2.0) // arbitrary closeness...
+    {
+        setPosition(target);
+        targetPosition = vec2(0.0);
+        setUnitState(UNIT_IDLE);
+        return;
+    }
+
+    if(!object) return;
 
     float newYaw = (180.0f/M_PI)*atan2(-diff.x, -diff.z);
     float oldYaw = object->getYaw();
     float yawDiff = newYaw - oldYaw;
 
-    if( yawDiff > 180.0f ) yawDiff -= 360.0f;
-    else if( yawDiff < -180.0f ) yawDiff += 360.0f;
+    if(yawDiff > 180.0f) yawDiff -= 360.0f;
+    else if(yawDiff < -180.0f) yawDiff += 360.0f;
 
     float deltaYaw = timeElapsed * info->yawSpeed + 1.0f;
-    if( (yawDiff >= 0 && yawDiff < deltaYaw) || (yawDiff <= 0 && yawDiff > -deltaYaw) )
+    if((yawDiff >= 0 && yawDiff < deltaYaw) || (yawDiff <= 0 && yawDiff > -deltaYaw))
     {
         //angle is small enough (less than 1 degree) so we can start walking now
         object->setYaw(newYaw);
         if(unitState == UNIT_ATTACKING)
             return;
 
-        if(glm::length(diff) < 0.5) // arbitrary closeness...
-        {
-            object->setPosition(target);
-            targetPosition = vec2(0.0);
-            setUnitState(UNIT_IDLE);
-            return;
-        }
         diff = glm::normalize(diff);
-
-        vec3 newPosition = object->getPosition() + timeElapsed * (info->speed * diff);
+        vec3 newPosition = getPosition() + timeElapsed * (info->speed * diff);
         newPosition.y = Root::shared().getScene()->getMap()->getTerrain()->heightAtGroundPosition(newPosition.x, newPosition.z);
-        object->setPosition(newPosition);
+        setPosition(newPosition);
     }
     else
     {
         //Rotate
-        if( yawDiff < 0 ) deltaYaw = -deltaYaw;
+        if(yawDiff < 0) deltaYaw = -deltaYaw;
         object->setYaw( oldYaw + deltaYaw );
     }
 
@@ -159,6 +165,8 @@ void Unit::setUnitState(UnitState state)
 
     unitState = state;
 
+    if(!object) return; //server
+
     switch(unitState)
     {
         case UNIT_IDLE:
@@ -170,7 +178,7 @@ void Unit::setUnitState(UnitState state)
             break;
 
         case UNIT_ATTACKING_OUT_OF_RANGE:
-            object->setAnimation("wave");
+            object->setAnimation("crouch_walk");
             break;
 
         case UNIT_ATTACKING:
@@ -210,6 +218,7 @@ void Unit::receiveDamage(int dmg, Unit* attacker)
     {
         setUnitState(UNIT_ATTACKING_OUT_OF_RANGE);
         targetUnit = attacker;
+        attacker->retain();
     }
 
     health -= dmg;
@@ -224,6 +233,18 @@ void Unit::receiveDamage(int dmg, Unit* attacker)
 void Unit::setTintColor(vec3 tC)
 {
     tintColor = tC;
-    object->setTintColor(tC);
+    if(object) object->setTintColor(tC);
     healthBar->fillColor = vec4(tintColor, 1.0);
+}
+
+void Unit::serialize(Packet& pk)
+{
+    pk << id;
+    pk << factionId;
+}
+
+void Unit::deserialize(Packet& pk)
+{
+    pk >> id;
+    pk >> factionId;
 }
