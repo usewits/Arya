@@ -18,6 +18,9 @@
 
 #include "Overlay.h"
 
+#define shadowX 2048
+#define shadowY 2048
+
 using std::string;
 using std::cerr;
 using std::endl;
@@ -92,7 +95,7 @@ namespace Arya
 
         glGenTextures(1, &shadowDepthTextureHandle);
         glBindTexture(GL_TEXTURE_2D, shadowDepthTextureHandle);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, 2048, 2048, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, shadowX, shadowY, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -211,7 +214,7 @@ namespace Arya
         //------------------------------
 
         glBindFramebuffer(GL_FRAMEBUFFER, shadowFBOHandle);
-        glViewport(0, 0, 2048, 2048);
+        glViewport(0, 0, shadowX, shadowY);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
