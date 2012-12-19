@@ -122,7 +122,7 @@ namespace Arya
 
     Model::~Model()
     {
-        for(int i = 0; i < meshes.size(); ++i)
+        for(unsigned int i = 0; i < meshes.size(); ++i)
         {
             meshes[i]->release();
             if( meshes[i]->getRefCount() <= 0 )
@@ -242,6 +242,7 @@ namespace Arya
                 nameBuf[count++] = 'g';
                 nameBuf[count++] = 'a';
                 nameBuf[count++] = 0;
+                
                 Material* mat = MaterialManager::shared().getMaterial(nameBuf);
                 model->addMaterial(mat);
             }

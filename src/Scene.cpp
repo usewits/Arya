@@ -163,7 +163,7 @@ namespace Arya
         if(basicProgram) delete basicProgram;
         basicProgram = 0;
 
-        for(int i = 0; i < objects.size(); ++i)
+        for(unsigned int i = 0; i < objects.size(); ++i)
             delete objects[i];
         objects.clear();
 
@@ -177,7 +177,7 @@ namespace Arya
         //We might want to let the Game loop on all
         //the objects and animate them. This way the game
         //has more control: it could slow animations down for example
-        for(int i = 0; i < objects.size(); ++i)
+        for(unsigned int i = 0; i < objects.size(); ++i)
         {
             objects[i]->updateAnimation(elapsedTime);
         }
@@ -223,7 +223,7 @@ namespace Arya
         basicProgram->setUniformMatrix4fv("vpMatrix", lightOrthoMatrix);
         basicProgram->setUniformMatrix4fv("viewMatrix", camera->getVMatrix());
 
-        for(int i = 0; i < objects.size(); ++i)
+        for(unsigned int i = 0; i < objects.size(); ++i)
         {
             if( objects[i]->model == 0 ) continue;
             if(objects[i]->isObsolete()) continue;
@@ -242,7 +242,7 @@ namespace Arya
             }
 
             Model* model = objects[i]->model;
-            for(int j = 0; j < model->getMeshes().size(); ++j)
+            for(unsigned int j = 0; j < model->getMeshes().size(); ++j)
             {
                 Mesh* mesh = model->getMeshes()[j];
                 if(mesh->frameCount > 0)
@@ -272,7 +272,7 @@ namespace Arya
         basicProgram->setUniformMatrix4fv("vpMatrix", camera->getVPMatrix());
         basicProgram->setUniformMatrix4fv("viewMatrix", camera->getVMatrix());
 
-        for(int i = 0; i < objects.size(); ++i)
+        for(unsigned int i = 0; i < objects.size(); ++i)
         {
             if( objects[i]->model == 0 ) continue;
             if(objects[i]->isObsolete()) continue;
@@ -291,7 +291,7 @@ namespace Arya
             }
 
             Model* model = objects[i]->model;
-            for(int j = 0; j < model->getMeshes().size(); ++j)
+            for(unsigned int j = 0; j < model->getMeshes().size(); ++j)
             {
                 Mesh* mesh = model->getMeshes()[j];
                 if(mesh->frameCount > 0)

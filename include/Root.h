@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vector>
+#include <list>
 #include <GL/glfw.h>
 #include <glm/glm.hpp>
 #include "common/Listeners.h"
@@ -13,7 +13,7 @@ namespace Arya
     class Scene;
     class Overlay;
 
-    class Root : public Singleton<Root>
+    class Root : public Singleton<Root>, public CommandListener
     {
         public:
             Root();
@@ -24,6 +24,9 @@ namespace Arya
             void stopRendering();
             bool getFullscreen() const { return fullscreen; }
             void setFullscreen(bool fullscreen = true);
+
+            //WARNING: You can NOT remove yourself as listener
+            //within the callback. You CAN remove other listeners
 
             //TODO: Extra arguments like APPEND_LAST or FRONT or CALL_ALWAYS or something??
             void addInputListener(InputListener* listener);
@@ -60,8 +63,13 @@ namespace Arya
 
             double oldTime;
 
-            std::vector<FrameListener*> frameListeners;
-            std::vector<InputListener*> inputListeners;
+            //IMPORTANT: These have to be vectors
+            //instead of lists because we need the
+            //possibility to add and erase elements
+            //while looping over them!
+            std::list<FrameListener*> frameListeners;
+            std::list<InputListener*> inputListeners;
+
             void keyDown(int key, int action);
             void mouseDown(int button, int action);
             void mouseWheelMoved(int pos);

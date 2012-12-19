@@ -1,5 +1,6 @@
 #pragma once
 #include "../../ext/buffer.hpp"
+#include "Arya.h" //for glm
 #include <vector>
 #include <string>
 #include <vector>
@@ -49,7 +50,7 @@ class Packet
 
         //READ functions
 
-        inline Packet& operator>>(int val)
+        inline Packet& operator>>(int& val)
         {
             if(readPos + sizeof(int) <= data.size())
             {
@@ -59,17 +60,73 @@ class Packet
             return *this;
         }
 
+        inline Packet& operator>>(float& val)
+        {
+            if(readPos + sizeof(float) <= data.size())
+            {
+                val = *(float*)&data[readPos];
+                readPos += sizeof(float);
+            }
+            return *this;
+        }
+
+        inline Packet& operator>>(unsigned int& val)
+        {
+            if(readPos + sizeof(unsigned int) <= data.size())
+            {
+                val = *(unsigned int*)&data[readPos];
+                readPos += sizeof(unsigned int);
+            }
+            return *this;
+        }
+
+        inline Packet& operator>>(std::string& str)
+        {
+            str.clear();
+            while(readPos <= data.size())
+            {
+                if(data[readPos] == 0) break;
+                str.push_back(data[readPos]);
+                ++readPos;
+            }
+            ++readPos;
+            return *this;
+        }
+
+        inline Packet& operator>>(std::vector<int>& val)
+        {
+            val.clear();
+            if(readPos + sizeof(unsigned int) <= data.size())
+            {
+                unsigned int size;
+                *this >> size;
+                val.resize(size);
+                for(unsigned int i = 0; i < size; ++i)
+                {
+                    if(readPos+sizeof(int)>data.size()) break;
+                    *this >> val[i];
+                }
+            }
+            return *this;
+        }
+
+        inline Packet& operator>>(vec3& val)
+        {
+            *this >> val.x >> val.y >> val.z;
+            return *this;
+        }
+
         //WRITE functions
 
         inline Packet& operator<<(unsigned int val)
         {
-            data.append(&val, sizeof(unsigned int));
+            //data.append(&val, sizeof(unsigned int));
             return *this;
         }
 
         inline Packet& operator<<(int val)
         {
-            data.append(&val, sizeof(int));
+            //data.append(&val, sizeof(int));
             return *this;
         }
 
@@ -98,9 +155,15 @@ class Packet
             return *this;
         }
 
+        inline Packet& operator<<(const vec3& val)
+        {
+            *this << (float)val.x << (float)val.y << (float)val.z;
+            return *this;
+        }
+
     private:
         buffer data;
-        int readPos;
+        unsigned int readPos;
         bool markedForSend;
 
         //The server must often send a packet to all clients
