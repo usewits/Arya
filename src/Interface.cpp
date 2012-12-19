@@ -42,7 +42,7 @@ namespace Arya
             rects[i]->texSize = vec2(q.s1 - q.s0, (q.t1 - q.t0));
             rects[i]->offsetInPixels.x = OFFSET_X + lastX;
             rects[i]->sizeInPixels = vec2(q.x1 - q.x0, (q.y1 - q.y0));
-            rects[i]->offsetInPixels.y = OFFSET_Y - (rects[i]->sizeInPixels.y/2.0);
+            rects[i]->offsetInPixels.y = OFFSET_Y - (rects[i]->sizeInPixels.y*0.5f);
 
             lastX = xpos;
         }
@@ -75,7 +75,7 @@ namespace Arya
                 rects[i + 6]->texSize = vec2(q.s1 - q.s0, (q.t1 - q.t0));
                 rects[i + 6]->sizeInPixels = vec2(q.x1 - q.x0, (q.y1 - q.y0));
                 rects[i + 6]->offsetInPixels.x = lastX + offsetFPS + OFFSET_X;
-                rects[i + 6]->offsetInPixels.y = OFFSET_Y - (rects[i + 6]->sizeInPixels.y / 2.0);
+                rects[i + 6]->offsetInPixels.y = OFFSET_Y - (rects[i + 6]->sizeInPixels.y*0.5f);
                 lastX = xpos;
             }
             count = 0;

@@ -221,7 +221,7 @@ namespace Arya
         // ...
         // level levels: 1^2
 
-        levelMax = log((float)(patchSizeMax-1), 2.0f) + 1;
+        levelMax = (int)log((float)(patchSizeMax-1), 2.0f) + 1;
 
         indexBuffer = new GLuint[levelMax];
         indexCount = new GLuint[levelMax];
@@ -330,7 +330,7 @@ namespace Arya
 
         int index = (int)((z + TERRAIN_SIZE)/2.0)*TERRAIN_SIZE + (int)((x + (TERRAIN_SIZE))/2.0);
         h = heights[index];
-        return scaleMatrix[1][1]*(h / 65535.0);
+        return scaleMatrix[1][1]*(h / 65535.0f);
     }
 
     //---------------------------------------

@@ -46,7 +46,7 @@ namespace Arya
         //---------------------------------------------
 
         vec3 ToMove = targetPosition - position;
-        float dist = ToMove.length();
+        float dist = (float)ToMove.length();
 
         // LOG_INFO(targetPosition.x << " " << targetPosition.y << " " <<  targetPosition .z << " " << position.x << " " << position.y << " " << position.z << "to move: " << dist);
 

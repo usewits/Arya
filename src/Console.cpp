@@ -13,7 +13,7 @@ namespace Arya
         searchNrLines = 50;
         textWidthInPixels = 10;
         textHeightInPixels = 10.0;
-        pixelsInBetween = 4.0;
+        pixelsInBetween = 4;
         visibility = false;
         activeLine = 0;
         nrCharOnLine = 0;
@@ -40,8 +40,8 @@ namespace Arya
         Rect* rect = new Rect; // here we initialize the frame for the console itself
         rects.push_back(rect);
         rect->offsetInPixels.x = 0.0;
-        rect->offsetInPixels.y = Root::shared().getWindowHeight() - 270.0;
-        rect->sizeInPixels.x = Root::shared().getWindowWidth() + 0.0;
+        rect->offsetInPixels.y = Root::shared().getWindowHeight() - 270.0f;
+        rect->sizeInPixels.x = Root::shared().getWindowWidth() + 0.0f;
         rect->sizeInPixels.y = 270.0; // height of kernel in pixels
         rect->fillColor = vec4(0.0, 0.0, 0.0, 0.4);
         rect->isVisible = false;
@@ -53,8 +53,8 @@ namespace Arya
             {
                 Rect* rect = new Rect;
                 rects.push_back(rect);
-                rect->sizeInPixels.x = textWidthInPixels;
-                rect->sizeInPixels.y = textHeightInPixels;
+                rect->sizeInPixels.x = (float)textWidthInPixels;
+                rect->sizeInPixels.y = (float)textHeightInPixels;
                 rect->offsetInPixels.x = j * rect->sizeInPixels.x;
                 rect->offsetInPixels.y = Root::shared().getWindowHeight() - (i+1) * (textHeightInPixels + pixelsInBetween);
                 rect->textureHandle = font->textureHandle;
@@ -67,8 +67,8 @@ namespace Arya
         {
             Rect* rect = new Rect;
             rects.push_back(rect);
-            rect->sizeInPixels.x = textWidthInPixels;
-            rect->sizeInPixels.y = textHeightInPixels;
+            rect->sizeInPixels.x = (float)textWidthInPixels;
+            rect->sizeInPixels.y = (float)textHeightInPixels;
             rect->offsetInPixels.x = i * rect->sizeInPixels.x;
             rect->offsetInPixels.y = Root::shared().getWindowHeight() - (history.size() + 1) * (rect->sizeInPixels.y + pixelsInBetween);
             rect->isVisible = false;

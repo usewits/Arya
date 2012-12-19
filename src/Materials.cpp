@@ -21,7 +21,7 @@ namespace Arya
 		if(mattyfile == 0) {
 			LOG_WARNING("Using default matty.");
 			type="Default";
-			a=1.0; b=1.0; c=0.3; d=0.7;
+			a=1.0f; b=1.0; c=0.3f; d=0.7f;
 		} else {
 			std::stringstream str(mattyfile->getData());
 			str >> type >> a >> b >> c >> d;

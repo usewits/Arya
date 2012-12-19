@@ -126,10 +126,10 @@ bool GameSessionInput::mouseDown(Arya::MOUSEBUTTON button, bool buttonDown, int 
             }
             else
             {
-                selectUnits(-1.0 + 2.0 * selectionRect.offsetInPixels.x / Root::shared().getWindowWidth(), 
-                        -1.0 + 2.0 * (selectionRect.offsetInPixels.x + selectionRect.sizeInPixels.x) / Root::shared().getWindowWidth(),
-                        -1.0 + 2.0 * selectionRect.offsetInPixels.y / Root::shared().getWindowHeight(), 
-                        -1.0 + 2.0 * (selectionRect.offsetInPixels.y + selectionRect.sizeInPixels.y) / Root::shared().getWindowHeight());
+                selectUnits(-1.0f + 2.0f * selectionRect.offsetInPixels.x / Root::shared().getWindowWidth(), 
+                        -1.0f + 2.0f * (selectionRect.offsetInPixels.x + selectionRect.sizeInPixels.x) / Root::shared().getWindowWidth(),
+                        -1.0f + 2.0f * selectionRect.offsetInPixels.y / Root::shared().getWindowHeight(), 
+                        -1.0f + 2.0f * (selectionRect.offsetInPixels.y + selectionRect.sizeInPixels.y) / Root::shared().getWindowHeight());
 
                 selectionRect.offsetInPixels = vec2(0.0);
                 selectionRect.sizeInPixels = vec2(0.0);
@@ -195,18 +195,18 @@ bool GameSessionInput::mouseMoved(int x, int y, int dx, int dy)
 
     if(draggingLeftMouse)
     {
-        int deltaX = x - originalMousePos.x;
-        int deltaY = y - originalMousePos.y;
+        int deltaX = (int)(x - originalMousePos.x);
+        int deltaY = (int)(y - originalMousePos.y);
 
         if(deltaX < 0 && deltaY > 0) {
-            selectionRect.offsetInPixels.x = x;
+            selectionRect.offsetInPixels.x = (float)x;
             selectionRect.offsetInPixels.y = originalMousePos.y;
             selectionRect.sizeInPixels.x = originalMousePos.x - x;
             selectionRect.sizeInPixels.y = y - originalMousePos.y;
         }
         else if(deltaX > 0 && deltaY < 0) {
             selectionRect.offsetInPixels.x = originalMousePos.x;
-            selectionRect.offsetInPixels.y = y;
+            selectionRect.offsetInPixels.y = (float)y;
             selectionRect.sizeInPixels.x = x - originalMousePos.x;
             selectionRect.sizeInPixels.y = originalMousePos.y - y;
         }
@@ -217,8 +217,8 @@ bool GameSessionInput::mouseMoved(int x, int y, int dx, int dy)
             selectionRect.sizeInPixels.y = y - originalMousePos.y;
         }
         else if(deltaX < 0 && deltaY < 0) {
-            selectionRect.offsetInPixels.x = x;
-            selectionRect.offsetInPixels.y = y;
+            selectionRect.offsetInPixels.x = (float)x;
+            selectionRect.offsetInPixels.y = (float)y;
             selectionRect.sizeInPixels.x = originalMousePos.x - x;
             selectionRect.sizeInPixels.y = originalMousePos.y - y;
         }
